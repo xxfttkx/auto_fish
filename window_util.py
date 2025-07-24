@@ -86,3 +86,17 @@ def click_mouse_window(hwnd, rel_x, rel_y):
     time.sleep(0.01)
     ctypes.windll.user32.mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0)
     print(f"鼠标左键单击完成（窗口内: {rel_x},{rel_y} | 屏幕: {abs_x},{abs_y}）")
+
+def get_search_region(center, offset):
+    """
+    根据中心点和偏移量计算搜索矩形区域。
+    :param center: (x, y) 搜索区域中心坐标
+    :param offset: int 搜索区域半径（像素）
+    :return: (left, top, right, bottom)
+    """
+    return (
+        center[0] - offset,
+        center[1] - offset,
+        center[0] + offset,
+        center[1] + offset
+    )

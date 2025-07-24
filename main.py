@@ -2,6 +2,7 @@
 import ctypes
 ctypes.windll.shcore.SetProcessDpiAwareness(2) 
 import sys
+sys.stdout.reconfigure(encoding='utf-8')
 import time
 import keyboard
 from datetime import datetime
@@ -75,13 +76,20 @@ def monitor_window(hwnd):
 
             # ====== 步骤2：自动定位红点密集区域 ======
             full_img = capture_window(hwnd)
-            red_rect, red_ratio = find_max_red_region(
-                full_img, RED_SEARCH_REGION_RECT, RED_DETECT_BOX_SIZE, RED_THRESHOLD)
-            # utils.save_screenshot(full_img, f'full_img')
-            print(f"检测到红点区域：{red_rect}, 密集度={red_ratio:.2f}")
+            found_red = False
+            count = 0
+            while not found_red and count<3:
+                offset = count * 100  # 每次偏移100像素
+                red_rect, red_ratio = find_max_red_region(
+                    full_img, get_search_region((RED_SEARCH_REGION_CENTER[0], RED_SEARCH_REGION_CENTER[1] + offset), RED_SEARCH_REGION_OFFSET), RED_DETECT_BOX_SIZE, RED_THRESHOLD)
+                # utils.save_screenshot(full_img, f'full_img')
+                print(f"检测到红点区域：{red_rect}, 密集度={red_ratio:.2f}")
+                count+=1
+                if red_ratio >= RED_THRESHOLD:
+                    break
             if red_ratio < RED_THRESHOLD:
-                print("未检测到红点，请检查或手动调整区域参数")
-                continue
+                print("找不到红点")
+                return
 
             red_start_time = None
             is_pressed = False
@@ -184,8 +192,6 @@ def monitor_window(hwnd):
         print("程序已终止。")
 
 if __name__ == "__main__":
-    sys.stdout.reconfigure(encoding='utf-8')
-    
     hwnds = find_window_by_process_name(PROCESS_NAME)
     if not hwnds:
         print(f"未找到名为 {PROCESS_NAME} 的窗口")

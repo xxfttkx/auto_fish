@@ -7,4 +7,5 @@
 ## 改动内容
 
 - 使用 [mss](https://github.com/BoboTiG/python-mss) 替换 `pyautogui.screenshot`，以支持 **副显示器截图**。
-- 使用 `ctypes.windll.shcore.SetProcessDpiAwareness(2)`，以解决 **显示器 DPI 缩放** 问题。
+- 使用 `ctypes.windll.shcore.SetProcessDpiAwareness(2)`，以解决 **显示器 DPI 缩放** 问题。\
+- 增多了红点区域的判定次数
