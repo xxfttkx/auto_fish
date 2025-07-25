@@ -29,16 +29,18 @@ def monitor_window(hwnd):
 
     try:
         while running[0]:
-            click_mouse_window(hwnd, *CLICK_POS)
+            full_img = capture_window(hwnd)
+            click_mouse_window(hwnd, *get_scale_point(CLICK_POS, full_img.shape[1], full_img.shape[0]))
             print(f"甩钩，{START_DELAY}秒后检测红点")
 
             # 新增：等待1秒检测特殊颜色区域
             time.sleep(2.5)
             full_img = capture_window(hwnd)
+            height, width = full_img.shape[:2]
             # cv2.imshow('window title',full_img)
             if full_img is not None:
                 found_post_cast = region_rect_major_color(
-                    full_img, POST_CAST_CHECK_RECT, POST_CAST_COLORS,
+                    full_img, get_scale_area(POST_CAST_CHECK_RECT,width,height), POST_CAST_COLORS,
                     tolerance=POST_CAST_TOLERANCE, ratio=POST_CAST_RATIO)
                 if found_post_cast:
                     print("鱼竿没耐久了，换杆")
@@ -66,7 +68,7 @@ def monitor_window(hwnd):
             while time.time() - delay_start < (START_DELAY - 2):
                 full_img = capture_window(hwnd)
                 if full_img is not None:
-                    if is_blue_target(full_img, BLUE_ROI, BLUE_COLORS, tolerance=BLUE_TOLERANCE):
+                    if is_blue_target(full_img, get_scale_area(BLUE_ROI,width,height), BLUE_COLORS, tolerance=BLUE_TOLERANCE):
                         print("鱼跑了")
                         blue_detected = True
                         break
@@ -80,8 +82,9 @@ def monitor_window(hwnd):
             count = 0
             while not found_red and count<3:
                 offset = count * 100  # 每次偏移100像素
+                center = (RED_SEARCH_REGION_CENTER[0], RED_SEARCH_REGION_CENTER[1] + offset)
                 red_rect, red_ratio = find_max_red_region(
-                    full_img, get_search_region((RED_SEARCH_REGION_CENTER[0], RED_SEARCH_REGION_CENTER[1] + offset), RED_SEARCH_REGION_OFFSET), RED_DETECT_BOX_SIZE, RED_THRESHOLD)
+                    full_img, get_search_region(get_scale_point(center,width,height), RED_SEARCH_REGION_OFFSET), RED_DETECT_BOX_SIZE, RED_THRESHOLD)
                 # utils.save_screenshot(full_img, f'full_img')
                 print(f"检测到红点区域：{red_rect}, 密集度={red_ratio:.2f}")
                 count+=1
@@ -128,13 +131,13 @@ def monitor_window(hwnd):
                 # ------- A/D互斥长按逻辑 -------
                 if is_pressed:
                     found_a = region_has_color(
-                        full_img, POINT_A_POS, POINT_CHECK_COLORS,
+                        full_img, get_scale_point(POINT_A_POS,width,height), POINT_CHECK_COLORS,
                         offset=POINT_REGION_OFFSET,
                         tolerance=POINT_CHECK_TOLERANCE,
                         ratio=POINT_REGION_RATIO
                     )
                     found_d = region_has_color(
-                        full_img, POINT_D_POS, POINT_CHECK_COLORS,
+                        full_img, get_scale_point(POINT_D_POS,width,height), POINT_CHECK_COLORS,
                         offset=POINT_REGION_OFFSET,
                         tolerance=POINT_CHECK_TOLERANCE,
                         ratio=POINT_REGION_RATIO
@@ -151,8 +154,9 @@ def monitor_window(hwnd):
                             keyboard.release("d")
                         keyboard.press(target_key)
                         last_key[0] = target_key
-
-                    cx1, cy1, cx2, cy2 = COLOR_CHECK_AREA
+                    
+                    
+                    cx1, cy1, cx2, cy2 = get_scale_area(COLOR_CHECK_AREA,width, height)
                     if is_color_match(full_img, cx1, cy1, cx2, cy2, TARGET_COLOR):
                         print(f"钓鱼完成")
                         release_mouse()
@@ -160,7 +164,7 @@ def monitor_window(hwnd):
                         blue_check_enable = False
                         # ===== 这里是新加的配置延迟 =====
                         time.sleep(AFTER_DETECT_CLICK_DELAY)
-                        click_mouse_window(hwnd, *SECOND_CLICK_POS)
+                        click_mouse_window(hwnd, *(get_scale_point(SECOND_CLICK_POS,width,height)))
                         print(f"{AFTER_SECOND_CLICK_DELAY}秒后继续钓鱼")
                         time.sleep(AFTER_SECOND_CLICK_DELAY)
                         cycle_active = False

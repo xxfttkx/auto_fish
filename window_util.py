@@ -100,3 +100,20 @@ def get_search_region(center, offset):
         center[0] + offset,
         center[1] + offset
     )
+
+def get_scale_area(rect, cur_w, cur_h, base_w=1920, base_h=1080):
+    x1, y1, x2, y2 = rect
+    scale_x = cur_w / base_w
+    scale_y = cur_h / base_h
+    return (
+        int(x1 * scale_x),
+        int(y1 * scale_y),
+        int(x2 * scale_x),
+        int(y2 * scale_y)
+    )
+
+def get_scale_point(point, cur_w, cur_h, base_w=1920, base_h=1080):
+    x, y = point
+    scale_x = cur_w / base_w
+    scale_y = cur_h / base_h
+    return int(x * scale_x), int(y * scale_y)
