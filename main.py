@@ -112,9 +112,7 @@ def monitor_window(hwnd):
                 red = is_red_dominant(roi, threshold=RED_THRESHOLD)
 
                 if CAPTURE_SCREENSHOT:
-                    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-                    filename = f"{timestamp}.png"
-                    save_screenshot(full_img, filename)
+                    save_screenshot(full_img, 'red_zone')
 
                 if not red:
                     if red_start_time is None:
