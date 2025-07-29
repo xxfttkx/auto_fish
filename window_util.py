@@ -2,14 +2,11 @@
 
 from datetime import datetime
 import win32gui
-import win32con
 import win32process
-import pyautogui
+import pygetwindow as gw
 import ctypes
-import os
 import cv2
 import numpy as np
-import utils
 import mss
 
 from config import *
@@ -52,14 +49,14 @@ def capture_window(hwnd):
             img = cv2.cvtColor(img, cv2.COLOR_BGRA2BGR)
         return img
         # return img
-        # print(f'client: width = {width},height = {height}')
+        # log(f'client: width = {width},height = {height}')
         # screenshot = pyautogui.screenshot(region=(x1, y1, width, height))
-        # print(f"已截取窗口客户区截图: {x1},{y1} - {x2},{y2} (宽度: {width}, 高度: {height})")
+        # log(f"已截取窗口客户区截图: {x1},{y1} - {x2},{y2} (宽度: {width}, 高度: {height})")
         # img = cv2.cvtColor(np.array(screenshot), cv2.COLOR_RGB2BGR)
         # utils.save_screenshot(img, f'save_screen shot_{datetime.now().strftime("%Y%m%d_%H%M%S")}.png')
         return img
     except Exception as e:
-        print(f"截图失败: {e}")
+        log(f"截图失败: {e}")
         return None
 
 def press_mouse_window(hwnd, rel_x, rel_y):
@@ -69,11 +66,11 @@ def press_mouse_window(hwnd, rel_x, rel_y):
     abs_y = client_rect[1] + rel_y
     ctypes.windll.user32.SetCursorPos(abs_x, abs_y)
     ctypes.windll.user32.mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0)
-    print(f"鼠标左键已按下（窗口内: {rel_x},{rel_y} | 屏幕: {abs_x},{abs_y}）")
+    log(f"鼠标左键已按下（窗口内: {rel_x},{rel_y} | 屏幕: {abs_x},{abs_y}）")
 
 def release_mouse():
     ctypes.windll.user32.mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0)
-    print("鼠标左键已释放")
+    log("鼠标左键已释放")
 
 def click_mouse_window(hwnd, rel_x, rel_y):
     # 基于客户区左上角的相对坐标
@@ -85,7 +82,7 @@ def click_mouse_window(hwnd, rel_x, rel_y):
     import time
     time.sleep(0.01)
     ctypes.windll.user32.mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0)
-    print(f"鼠标左键单击完成（窗口内: {rel_x},{rel_y} | 屏幕: {abs_x},{abs_y}）")
+    log(f"鼠标左键单击完成（窗口内: {rel_x},{rel_y} | 屏幕: {abs_x},{abs_y}）")
 
 def get_search_region(center, offset):
     """
@@ -117,3 +114,26 @@ def get_scale_point(point, cur_w, cur_h, base_w=1920, base_h=1080):
     scale_x = cur_w / base_w
     scale_y = cur_h / base_h
     return int(x * scale_x), int(y * scale_y)
+
+def log(*args, sep=' ', end='\n'):
+    """带时间前缀的打印函数，支持多个参数"""
+    now = datetime.now().strftime("[%H:%M:%S]")
+    print(now, *args, sep=sep, end=end)
+
+def find_target_window():
+    """查找并返回窗口标题完全是 '星痕共鸣' 的窗口对象"""
+    all_windows = gw.getAllWindows()
+    for w in all_windows:
+        if w.title == "星痕共鸣":
+            log("成功获取目标窗口")
+            return w
+    log("未找到游戏窗口")
+    return None
+
+def get_window_by_hwnd(hwnd):
+    """根据窗口句柄获取窗口对象"""
+    try:
+        return gw.Window(hWnd=hwnd)
+    except Exception as e:
+        log(f"获取窗口失败: {e}")
+        return None

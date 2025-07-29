@@ -5,33 +5,35 @@ import sys
 sys.stdout.reconfigure(encoding='utf-8')
 import time
 import keyboard
-from datetime import datetime
 from config import *
 from window_util import *
 from color_util import *
 from utils import save_screenshot
 
 def monitor_window(hwnd):
-    running = [True]
+    isRunning = True
     last_key = [None]  # 记录上一次长按的"a"或"d"
+    window = get_window_by_hwnd(hwnd)
+    if not window:
+        log(f"未找到窗口句柄 {hwnd} 对应的窗口")
+        return
 
     def on_esc_press(e):
         if e.event_type == keyboard.KEY_DOWN and e.name == 'esc':
-            print("\n检测到 Esc 键按下，程序即将退出...")
-            running[0] = False
+            log("\n检测到 Esc 键按下，程序即将退出...")
+            isRunning = False
 
     keyboard.on_press(on_esc_press)
-    print("程序已启动，按 Esc 键可随时退出")
-    win32gui.ShowWindow(hwnd, win32con.SW_RESTORE)
-    win32gui.SetForegroundWindow(hwnd)
-    print("已切换到目标窗口")
+    log("程序已启动，按 Esc 键可随时退出")
+    window.activate()
+    log("已切换到目标窗口")
     time.sleep(1)
 
     try:
-        while running[0]:
+        while isRunning:
             full_img = capture_window(hwnd)
             click_mouse_window(hwnd, *get_scale_point(CLICK_POS, full_img.shape[1], full_img.shape[0]))
-            print(f"甩钩，{START_DELAY}秒后检测红点")
+            log(f"甩钩，{START_DELAY}秒后检测红点")
 
             # 新增：等待1秒检测特殊颜色区域
             time.sleep(2.5)
@@ -43,20 +45,18 @@ def monitor_window(hwnd):
                     full_img, get_scale_area(POST_CAST_CHECK_RECT,width,height), POST_CAST_COLORS,
                     tolerance=POST_CAST_TOLERANCE, ratio=POST_CAST_RATIO)
                 if found_post_cast:
-                    print("鱼竿没耐久了，换杆")
+                    log("鱼竿没耐久了，换杆")
                     # 第一步：模拟按下M键
                     keyboard.press(ROD_NO_DURABILITY_KEY)
                     time.sleep(0.05)
                     keyboard.release(ROD_NO_DURABILITY_KEY)
                     time.sleep(ROD_NO_DURABILITY_DELAY)
                     # 第二步：点击 ROD_CHANGE_CLICK_POS
-                    win32gui.ShowWindow(hwnd, win32con.SW_RESTORE)
-                    win32gui.SetForegroundWindow(hwnd)
+                    window.activate()
                     click_mouse_window(hwnd, *ROD_CHANGE_CLICK_POS)
                     time.sleep(ROD_NO_DURABILITY_DELAY)
                     # 第三步：点击 ROD_CONFIRM_CLICK_POS
-                    win32gui.ShowWindow(hwnd, win32con.SW_RESTORE)
-                    win32gui.SetForegroundWindow(hwnd)
+                    window.activate()
                     click_mouse_window(hwnd, *ROD_CONFIRM_CLICK_POS)
                     time.sleep(ROD_NO_DURABILITY_DELAY)
                     continue
@@ -69,7 +69,7 @@ def monitor_window(hwnd):
                 full_img = capture_window(hwnd)
                 if full_img is not None:
                     if is_blue_target(full_img, get_scale_area(BLUE_ROI,width,height), BLUE_COLORS, tolerance=BLUE_TOLERANCE):
-                        print("鱼跑了")
+                        log("鱼跑了")
                         blue_detected = True
                         break
                 time.sleep(0.05)
@@ -86,12 +86,12 @@ def monitor_window(hwnd):
                 red_rect, red_ratio = find_max_red_region(
                     full_img, get_search_region(get_scale_point(center,width,height), RED_SEARCH_REGION_OFFSET), RED_DETECT_BOX_SIZE, RED_THRESHOLD)
                 # utils.save_screenshot(full_img, f'full_img')
-                print(f"检测到红点区域：{red_rect}, 密集度={red_ratio:.2f}")
+                log(f"检测到红点区域：{red_rect}, 密集度={red_ratio:.2f}")
                 count+=1
                 if red_ratio >= RED_THRESHOLD:
                     break
             if red_ratio < RED_THRESHOLD:
-                print("找不到红点")
+                log("找不到红点")
                 return
 
             red_start_time = None
@@ -99,14 +99,14 @@ def monitor_window(hwnd):
             cycle_active = True
             blue_check_enable = True
 
-            while cycle_active and running[0]:
+            while cycle_active and isRunning:
                 full_img = capture_window(hwnd)
                 if full_img is None:
                     time.sleep(0.1)
                     continue
 
-                if blue_check_enable and is_blue_target(full_img, BLUE_ROI, BLUE_COLORS, tolerance=BLUE_TOLERANCE):
-                    print("鱼跑了")
+                if blue_check_enable and is_blue_target(full_img, get_scale_area(BLUE_ROI,width,height), BLUE_COLORS, tolerance=BLUE_TOLERANCE):
+                    log("鱼跑了")
                     break
 
                 # 只监控本轮刚刚自动检测到的红点区域
@@ -122,7 +122,7 @@ def monitor_window(hwnd):
                         red_start_time = time.time()
                     elif time.time() - red_start_time > RED_NOT_FOUND_TIME:
                         if not is_pressed:
-                            print("红点消失超过{:.1f}秒，上钩了".format(RED_NOT_FOUND_TIME))
+                            log("红点消失超过{:.1f}秒，上钩了".format(RED_NOT_FOUND_TIME))
                             press_mouse_window(hwnd, *CLICK_POS)
                             is_pressed = True
                 else:
@@ -158,14 +158,14 @@ def monitor_window(hwnd):
                     
                     cx1, cy1, cx2, cy2 = get_scale_area(COLOR_CHECK_AREA,width, height)
                     if is_color_match(full_img, cx1, cy1, cx2, cy2, TARGET_COLOR):
-                        print(f"钓鱼完成")
+                        log(f"钓鱼完成")
                         release_mouse()
                         is_pressed = False
                         blue_check_enable = False
                         # ===== 这里是新加的配置延迟 =====
                         time.sleep(AFTER_DETECT_CLICK_DELAY)
                         click_mouse_window(hwnd, *(get_scale_point(SECOND_CLICK_POS,width,height)))
-                        print(f"{AFTER_SECOND_CLICK_DELAY}秒后继续钓鱼")
+                        log(f"{AFTER_SECOND_CLICK_DELAY}秒后继续钓鱼")
                         time.sleep(AFTER_SECOND_CLICK_DELAY)
                         cycle_active = False
                         if last_key[0] == "a":
@@ -183,7 +183,7 @@ def monitor_window(hwnd):
 
                 time.sleep(0.01)
     except Exception as e:
-        print("发生异常：", e)
+        log("发生异常：", e)
     finally:
         release_mouse()
         if last_key[0] == "a":
@@ -191,13 +191,13 @@ def monitor_window(hwnd):
         if last_key[0] == "d":
             keyboard.release("d")
         keyboard.unhook_all()
-        print("程序已终止。")
+        log("程序已终止。")
 
 if __name__ == "__main__":
     hwnds = find_window_by_process_name(PROCESS_NAME)
     if not hwnds:
-        print(f"未找到名为 {PROCESS_NAME} 的窗口")
+        log(f"未找到名为 {PROCESS_NAME} 的窗口")
     else:
         hwnd = hwnds[0]
-        print("开始监控窗口：", win32gui.GetWindowText(hwnd))
+        log("开始监控窗口：", win32gui.GetWindowText(hwnd))
         monitor_window(hwnd)
