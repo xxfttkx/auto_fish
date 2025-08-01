@@ -48,12 +48,11 @@ MOUSEEVENTF_LEFTDOWN = 0x0002      # 鼠标左键按下事件码
 MOUSEEVENTF_LEFTUP = 0x0004        # 鼠标左键抬起事件码
 
 # ====== A/D按键判定参数 ======
-POINT_A_POS = (938, 540)           # 检查“A”键的判定点（窗口内坐标）
-POINT_D_POS = (982, 540)           # 检查“D”键的判定点（窗口内坐标）
+POINT_A_POS = (860, 540)           # 检查“A”键的判定点（窗口内坐标）
+POINT_D_POS = (1100, 540)           # 检查“D”键的判定点（窗口内坐标）
 POINT_CHECK_COLORS = [             # “A/D”判定目标颜色
-    (216, 209, 196),
-    (237, 243, 247),
-    (219, 211, 197)
+    (251, 174, 20),
+    (251, 97, 29)
 ]
 POINT_CHECK_TOLERANCE = 20         # “A/D”颜色容忍度
 POINT_REGION_OFFSET = 2            # 检测区域范围(判定点±几像素)
