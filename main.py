@@ -11,7 +11,7 @@ from color_util import *
 from utils import save_screenshot
 
 def monitor_window(hwnd):
-    isRunning = True
+    isRunning = [True]
     last_key = [None]  # 记录上一次长按的"a"或"d"
     window = get_window_by_hwnd(hwnd)
     if not window:
@@ -20,8 +20,8 @@ def monitor_window(hwnd):
 
     def on_esc_press(e):
         if e.event_type == keyboard.KEY_DOWN and e.name == 'esc':
-            log("\n检测到 Esc 键按下，程序即将退出...")
-            isRunning = False
+            log("检测到 Esc 键按下，程序即将退出...")
+            isRunning[0] = False
 
     keyboard.on_press(on_esc_press)
     log("程序已启动，按 Esc 键可随时退出")
@@ -30,7 +30,7 @@ def monitor_window(hwnd):
     time.sleep(1)
 
     try:
-        while isRunning:
+        while isRunning[0]:
             full_img = capture_window(hwnd)
             click_mouse_window(hwnd, *get_scale_point(CLICK_POS, full_img.shape[1], full_img.shape[0]))
             log(f"甩钩，{START_DELAY}秒后检测红点")
@@ -80,6 +80,7 @@ def monitor_window(hwnd):
             full_img = capture_window(hwnd)
             found_red = False
             count = 0
+            fish_region = []
             while not found_red and count<3:
                 offset = count * 100  # 每次偏移100像素
                 center = (RED_SEARCH_REGION_CENTER[0], RED_SEARCH_REGION_CENTER[1] + offset)
@@ -87,6 +88,7 @@ def monitor_window(hwnd):
                     full_img, get_search_region(get_scale_point(center,width,height), RED_SEARCH_REGION_OFFSET), RED_DETECT_BOX_SIZE, RED_THRESHOLD)
                 # utils.save_screenshot(full_img, f'full_img')
                 log(f"检测到红点区域：{red_rect}, 密集度={red_ratio:.2f}")
+                fish_region = red_rect
                 count+=1
                 if red_ratio >= RED_THRESHOLD:
                     break
@@ -99,7 +101,7 @@ def monitor_window(hwnd):
             cycle_active = True
             blue_check_enable = True
 
-            while cycle_active and isRunning:
+            while cycle_active and isRunning[0]:
                 full_img = capture_window(hwnd)
                 if full_img is None:
                     time.sleep(0.1)
@@ -130,22 +132,11 @@ def monitor_window(hwnd):
 
                 # ------- A/D互斥长按逻辑 -------
                 if is_pressed:
-                    found_a = region_has_color(
-                        full_img, get_scale_point(POINT_A_POS,width,height), POINT_CHECK_COLORS,
-                        offset=POINT_REGION_OFFSET,
-                        tolerance=POINT_CHECK_TOLERANCE,
-                        ratio=POINT_REGION_RATIO
-                    )
-                    found_d = region_has_color(
-                        full_img, get_scale_point(POINT_D_POS,width,height), POINT_CHECK_COLORS,
-                        offset=POINT_REGION_OFFSET,
-                        tolerance=POINT_CHECK_TOLERANCE,
-                        ratio=POINT_REGION_RATIO
-                    )
+                    best_rect, best_score = find_best_water_region(full_img,fish_region,"assets/water_left.png")
                     target_key = None
-                    if found_a:
+                    if best_rect[0]+best_rect[2]/2<width/2:
                         target_key = "a"
-                    elif found_d:
+                    else:
                         target_key = "d"
                     if target_key and target_key != last_key[0]:
                         if last_key[0] == "a":

@@ -137,3 +137,59 @@ def get_window_by_hwnd(hwnd):
     except Exception as e:
         log(f"获取窗口失败: {e}")
         return None
+
+def find_best_water_region(screenshot, fish_region, template_path, step=10):
+    """
+    在screenshot里，围绕fish_region中心点，横向滑动template宽度的矩形区域，y不变，找最佳匹配。
+
+    参数:
+        screenshot: np.array, BGR图
+        fish_region: (x, y, w, h)
+        template_path: 模板路径，灰度读入
+        step: 横向滑动步长
+        search_range: 滑动范围，单位像素，左右各search_range像素
+
+    返回:
+        best_rect: (x, y, w, h)
+        best_score: 匹配得分
+    """
+
+    template = cv2.imread(template_path, cv2.IMREAD_GRAYSCALE)
+    if template is None:
+        raise FileNotFoundError(f"模板图像未找到: {template_path}")
+    template_h, template_w = template.shape
+
+    # 鱼区中心横坐标
+    fish_center_x = fish_region[0] + fish_region[2] // 2
+    # y坐标固定（可以用fish_region[1]或者更精细定位，比如中心纵坐标减去一半模板高）
+    y = fish_region[1]
+
+    # 先转成灰度图，方便matchTemplate
+    screenshot_gray = cv2.cvtColor(screenshot, cv2.COLOR_BGR2GRAY)
+
+    best_score = -1
+    best_rect = None
+
+    # 计算滑动范围的左右边界，保证不超出截图边界
+    x_start = 0
+    height, width = screenshot.shape[:2]
+    x_end = width
+
+    for x in range(x_start, x_end + 1, step):
+        # 拿 2 倍高度的区域
+        combined_region = screenshot_gray[y:y + 2 * template_h, x:x + template_w]
+        if combined_region.shape != (2 * template_h, template_w):
+            continue
+
+        white_mask = (combined_region > 200).astype(np.uint8)
+        white_pixels = cv2.countNonZero(white_mask)
+        total_pixels = combined_region.shape[0] * combined_region.shape[1]
+        score = white_pixels / total_pixels
+
+        if score > best_score:
+            best_score = score
+            best_rect = (x, y, template_w, 2 * template_h)
+        
+
+    print(f"Best match: {best_rect}, score={best_score:.4f}")
+    return best_rect, best_score
