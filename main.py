@@ -134,10 +134,13 @@ def monitor_window(hwnd):
                 if is_pressed:
                     best_rect, best_score = find_best_water_region(full_img,fish_region,"assets/water_left.png")
                     target_key = None
-                    if best_rect[0]+best_rect[2]/2<width/2:
-                        target_key = "a"
+                    if best_score < 0.001:
+                        target_key = last_key[0]
                     else:
-                        target_key = "d"
+                        if best_rect[0]+best_rect[2]/2<width/2:
+                            target_key = "a"
+                        else:
+                            target_key = "d"
                     if target_key and target_key != last_key[0]:
                         if last_key[0] == "a":
                             keyboard.release("a")
