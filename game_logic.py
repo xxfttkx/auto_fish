@@ -58,7 +58,7 @@ def check_and_replace_rod(full_img, width, height, hwnd, window):
     need_change_rod = match_add_rod(full_img,"assets/add_rod.png")
 
     log(f"need_change_rod.score = {need_change_rod}")
-    if need_change_rod<0.95:
+    if need_change_rod<0.9:
         return False
 
     log("鱼竿没耐久了，换杆")
