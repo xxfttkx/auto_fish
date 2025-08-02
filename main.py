@@ -1,5 +1,7 @@
 # main.py
 import ctypes
+
+import game_logic
 ctypes.windll.shcore.SetProcessDpiAwareness(2) 
 import sys
 sys.stdout.reconfigure(encoding='utf-8')
@@ -32,34 +34,16 @@ def monitor_window(hwnd):
     try:
         while isRunning[0]:
             full_img = capture_window(hwnd)
+            height, width = full_img.shape[:2]
+            game_logic.check_and_replace_rod(full_img,width,height,hwnd,window)
+                
             click_mouse_window(hwnd, *get_scale_point(CLICK_POS, full_img.shape[1], full_img.shape[0]))
             log(f"甩钩，{START_DELAY}秒后检测红点")
 
             # 新增：等待1秒检测特殊颜色区域
             time.sleep(2.5)
             full_img = capture_window(hwnd)
-            height, width = full_img.shape[:2]
             # cv2.imshow('window title',full_img)
-            if full_img is not None:
-                found_post_cast = region_rect_major_color(
-                    full_img, get_scale_area(POST_CAST_CHECK_RECT,width,height), POST_CAST_COLORS,
-                    tolerance=POST_CAST_TOLERANCE, ratio=POST_CAST_RATIO)
-                if found_post_cast:
-                    log("鱼竿没耐久了，换杆")
-                    # 第一步：模拟按下M键
-                    keyboard.press(ROD_NO_DURABILITY_KEY)
-                    time.sleep(0.05)
-                    keyboard.release(ROD_NO_DURABILITY_KEY)
-                    time.sleep(ROD_NO_DURABILITY_DELAY)
-                    # 第二步：点击 ROD_CHANGE_CLICK_POS
-                    window.activate()
-                    click_mouse_window(hwnd, *ROD_CHANGE_CLICK_POS)
-                    time.sleep(ROD_NO_DURABILITY_DELAY)
-                    # 第三步：点击 ROD_CONFIRM_CLICK_POS
-                    window.activate()
-                    click_mouse_window(hwnd, *ROD_CONFIRM_CLICK_POS)
-                    time.sleep(ROD_NO_DURABILITY_DELAY)
-                    continue
 
             # 补足剩余延迟（如后面还需等到2秒），兼容原蓝色检测逻辑
             time.sleep(1)
