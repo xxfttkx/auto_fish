@@ -119,7 +119,7 @@ def monitor_window(hwnd):
                         target_key = last_key[0]
                     else:
                         center_x = best_rect[0] + best_rect[2] / 2
-                        if abs(center_x - width / 2) <= 150:
+                        if abs(center_x - width / 2) <= 200:
                             target_key = None
                         elif center_x<width/2:
                             target_key = "a"
