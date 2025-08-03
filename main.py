@@ -121,10 +121,18 @@ def monitor_window(hwnd):
                     if best_score < 0.001:
                         target_key = last_key[0]
                     else:
-                        if best_rect[0]+best_rect[2]/2<width/2:
+                        center_x = best_rect[0] + best_rect[2] / 2
+                        if center_x<width/2:
                             target_key = "a"
                         else:
                             target_key = "d"
+                        if abs(center_x - width / 2) <= 150:
+                            if last_key[0] == "a":
+                                keyboard.release("a")
+                            elif last_key[0] == "d":
+                                keyboard.release("d")
+                            time.sleep(0.1)
+                            continue
                     if target_key and target_key != last_key[0]:
                         if last_key[0] == "a":
                             keyboard.release("a")
