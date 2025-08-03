@@ -21,8 +21,8 @@ def monitor_window(hwnd):
         return
 
     def on_esc_press(e):
-        if e.event_type == keyboard.KEY_DOWN and e.name == 'esc':
-            log("检测到 Esc 键按下，程序即将退出...")
+        if e.event_type == keyboard.KEY_DOWN and e.name.lower() in ('esc', '~', 'q', 'ctrl'):
+            log(f"检测到 {e.name} 键按下，程序即将退出...")
             isRunning[0] = False
 
     keyboard.on_press(on_esc_press)
@@ -102,10 +102,9 @@ def monitor_window(hwnd):
                     roi = full_img[y1:y2, x1:x2]
                     red = is_red_dominant(roi, threshold=RED_THRESHOLD)
                     white = is_white_dominant(roi, threshold=0.2)
-                    
+
                 if not red and white:
                     if not is_pressed:
-                        log("红点消失超过{:.1f}秒，上钩了".format(RED_NOT_FOUND_TIME))
                         press_mouse_window(hwnd, *CLICK_POS)
                         is_pressed = True
                 else:
