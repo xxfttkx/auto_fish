@@ -97,20 +97,17 @@ def monitor_window(hwnd):
 
                 # 只监控本轮刚刚自动检测到的红点区域
                 x1, y1, x2, y2 = red_rect
-                roi = full_img[y1:y2, x1:x2]
-                red = is_red_dominant(roi, threshold=RED_THRESHOLD)
-
-                if CAPTURE_SCREENSHOT:
-                    save_screenshot(full_img, 'red_zone')
-
-                if not red:
-                    if red_start_time is None:
-                        red_start_time = time.time()
-                    elif time.time() - red_start_time > RED_NOT_FOUND_TIME:
-                        if not is_pressed:
-                            log("红点消失超过{:.1f}秒，上钩了".format(RED_NOT_FOUND_TIME))
-                            press_mouse_window(hwnd, *CLICK_POS)
-                            is_pressed = True
+                
+                if not is_pressed: 
+                    roi = full_img[y1:y2, x1:x2]
+                    red = is_red_dominant(roi, threshold=RED_THRESHOLD)
+                    white = is_white_dominant(roi, threshold=0.2)
+                    
+                if not red and white:
+                    if not is_pressed:
+                        log("红点消失超过{:.1f}秒，上钩了".format(RED_NOT_FOUND_TIME))
+                        press_mouse_window(hwnd, *CLICK_POS)
+                        is_pressed = True
                 else:
                     red_start_time = None
 
@@ -119,15 +116,16 @@ def monitor_window(hwnd):
                     best_rect, best_score = find_best_water_region(full_img,fish_region,"assets/water_left.png")
                     target_key = None
                     if best_score < 0.001:
+                        center_x = -1
                         target_key = last_key[0]
                     else:
                         center_x = best_rect[0] + best_rect[2] / 2
-                        if center_x<width/2:
+                        if abs(center_x - width / 2) <= 150:
+                            target_key = None
+                        elif center_x<width/2:
                             target_key = "a"
                         else:
                             target_key = "d"
-                        if abs(center_x - width / 2) <= 150:
-                            target_key = None
                     if target_key != last_key[0]:
                         if last_key[0] == "a":
                             keyboard.release("a")

@@ -3,6 +3,7 @@
 import numpy as np
 import cv2
 from config import *
+from window_util import log
 
 def is_red_dominant(roi, threshold=0.6):
     hsv = cv2.cvtColor(roi, cv2.COLOR_BGR2HSV)
@@ -17,6 +18,14 @@ def is_red_dominant(roi, threshold=0.6):
     total_pixels = roi.shape[0] * roi.shape[1]
     red_ratio = red_pixel_count / total_pixels
     return red_ratio >= threshold
+
+def is_white_dominant(roi, threshold=0.2):
+    # 转为灰度图或直接在 BGR 上操作
+    # 假设 BGR 图像中，白色像素满足三个通道都接近 255
+    white_mask = np.all(roi > 200, axis=2)  # 所有通道都大于 240 被认为是白色
+    white_ratio = np.sum(white_mask) / (roi.shape[0] * roi.shape[1])
+    log(f"白色像素比例: {white_ratio:.2f} (阈值: {threshold})")
+    return white_ratio > threshold
 
 def find_max_red_region(img, search_rect, box_size=7, threshold=RED_THRESHOLD):
     """
