@@ -133,10 +133,11 @@ def monitor_window(hwnd):
                             keyboard.release("a")
                         elif last_key[0] == "d":
                             keyboard.release("d")
+                        last_key[0] = target_key
                     if target_key:
                         keyboard.press(target_key)
-                        last_key[0] = target_key
-                    log(f"target_key = {target_key or 'None'}, best_score = {best_score:.4f}, center_x = {center_x:.2f}")
+                    if best_score and center_x:
+                        log(f"target_key = {target_key or 'None'}, best_score = {best_score:.4f}, center_x = {center_x:.2f}")
                     
                     cx1, cy1, cx2, cy2 = get_scale_area(COLOR_CHECK_AREA,width, height)
                     if is_color_match(full_img, cx1, cy1, cx2, cy2, TARGET_COLOR):
