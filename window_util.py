@@ -191,5 +191,5 @@ def find_best_water_region(screenshot, fish_region, template_path, step=10):
             best_rect = (x, y, template_w, 2 * template_h)
         
 
-    log(f"Best match: {best_rect}, score={best_score:.4f}")
+    # log(f"Best match: {best_rect}, score={best_score:.4f}")
     return best_rect, best_score

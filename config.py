@@ -22,7 +22,7 @@ RED_SEARCH_REGION_RECT = (                    # 红点大搜索区域(左上x,�
 )
 RED_DETECT_BOX_SIZE = 7             # 红点检测小方块边长（像素，建议7）
 RED_THRESHOLD = 0.6                 # 判定红色像素比例的阈值
-RED_NOT_FOUND_TIME = 0.8          # 红点消失多长时间判定为“上钩”（秒）
+RED_NOT_FOUND_TIME = 0.7          # 红点消失多长时间判定为“上钩”（秒）
 
 # ====== 钓鱼完成检测参数（灰色区域）======
 COLOR_CHECK_AREA = (1454, 980, 1520, 1003)    # 判定钓鱼完成的灰色区域（窗口内坐标）

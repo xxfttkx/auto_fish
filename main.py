@@ -127,20 +127,16 @@ def monitor_window(hwnd):
                         else:
                             target_key = "d"
                         if abs(center_x - width / 2) <= 150:
-                            if last_key[0] == "a":
-                                keyboard.release("a")
-                            elif last_key[0] == "d":
-                                keyboard.release("d")
-                            time.sleep(0.1)
-                            continue
-                    if target_key and target_key != last_key[0]:
+                            target_key = None
+                    if target_key != last_key[0]:
                         if last_key[0] == "a":
                             keyboard.release("a")
                         elif last_key[0] == "d":
                             keyboard.release("d")
+                    if target_key:
                         keyboard.press(target_key)
                         last_key[0] = target_key
-                    
+                    log(f"target_key = {target_key or 'None'}, best_score = {best_score:.4f}, center_x = {center_x:.2f}")
                     
                     cx1, cy1, cx2, cy2 = get_scale_area(COLOR_CHECK_AREA,width, height)
                     if is_color_match(full_img, cx1, cy1, cx2, cy2, TARGET_COLOR):
@@ -167,7 +163,7 @@ def monitor_window(hwnd):
                         keyboard.release("d")
                         last_key[0] = None
 
-                time.sleep(0.01)
+                time.sleep(0.04)
     except Exception as e:
         log("发生异常：", e)
     finally:
