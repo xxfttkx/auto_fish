@@ -78,7 +78,7 @@ def monitor_window(hwnd):
                     break
             if red_ratio < RED_THRESHOLD:
                 log("找不到红点")
-                return
+                # return
 
             red_start_time = None
             is_pressed = False
