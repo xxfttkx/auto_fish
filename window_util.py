@@ -115,6 +115,13 @@ def get_scale_point(point, cur_w, cur_h, base_w=1920, base_h=1080):
     scale_y = cur_h / base_h
     return int(x * scale_x), int(y * scale_y)
 
+def get_scale_val(val, cur_w, cur_h, base_w=1920, base_h=1080):
+    scale_x = cur_w / base_w
+    return val * scale_x
+
+def get_int_scale_val(val, cur_w, cur_h, base_w=1920, base_h=1080):
+    return int(get_scale_val(val, cur_w, cur_h, base_w, base_h))
+
 def log(*args, sep=' ', end='\n'):
     """带时间前缀的打印函数，支持多个参数"""
     now = datetime.now().strftime("[%H:%M:%S]")
@@ -153,12 +160,14 @@ def find_best_water_region(screenshot, fish_region, template_path, step=10):
         best_rect: (x, y, w, h)
         best_score: 匹配得分
     """
-
+    height, width = screenshot.shape[:2]
+    step = get_int_scale_val(step, width, height)
     template = cv2.imread(template_path, cv2.IMREAD_GRAYSCALE)
     if template is None:
         raise FileNotFoundError(f"模板图像未找到: {template_path}")
     template_h, template_w = template.shape
-
+    template_h = get_int_scale_val(template_h, width, height)
+    template_w = get_int_scale_val(template_w, width, height)
     # 鱼区中心横坐标
     fish_center_x = fish_region[0] + fish_region[2] // 2
     # y坐标固定（可以用fish_region[1]或者更精细定位，比如中心纵坐标减去一半模板高）
@@ -172,7 +181,7 @@ def find_best_water_region(screenshot, fish_region, template_path, step=10):
 
     # 计算滑动范围的左右边界，保证不超出截图边界
     x_start = 0
-    height, width = screenshot.shape[:2]
+    
     x_end = width
 
     for x in range(x_start, x_end + 1, step):
