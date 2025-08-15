@@ -75,12 +75,12 @@ def check_and_replace_rod(full_img, width, height, hwnd, window):
 
     # 第二步：点击更换位置
     window.activate()
-    click_mouse_window(hwnd, *ROD_CHANGE_CLICK_POS)
+    click_mouse_window(hwnd, *get_scale_point(ROD_CHANGE_CLICK_POS, full_img.shape[1], full_img.shape[0]))
     time.sleep(ROD_NO_DURABILITY_DELAY)
 
-    # 第三步：点击确认
-    window.activate()
-    click_mouse_window(hwnd, *ROD_CONFIRM_CLICK_POS)
-    time.sleep(ROD_NO_DURABILITY_DELAY)
+    # # 第三步：点击确认
+    # window.activate()
+    # click_mouse_window(hwnd, *ROD_CONFIRM_CLICK_POS)
+    # time.sleep(ROD_NO_DURABILITY_DELAY)
 
     return True
