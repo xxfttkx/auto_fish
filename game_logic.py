@@ -20,9 +20,13 @@ def match_add_rod(full_img, template_path, roi_scale=(0.75, 0.75), match_method=
         best_score: 匹配得分（0~1）
     """
     # 加载并灰度化模板
+    scale_x = full_img.shape[1] / 1920  # 宽比例
+    scale_y = full_img.shape[0] / 1080  #   
     template = cv2.imread(template_path, cv2.IMREAD_GRAYSCALE)
     if template is None:
         raise FileNotFoundError(f"未找到模板文件: {template_path}")
+    template = cv2.resize(template, (int(template.shape[1] * scale_x),
+                                 int(template.shape[0] * scale_y)))
     template_h, template_w = template.shape
 
     # 转为灰度图
@@ -58,7 +62,7 @@ def check_and_replace_rod(full_img, width, height, hwnd, window):
     need_change_rod = match_add_rod(full_img,"assets/add_rod.png")
 
     log(f"need_change_rod.score = {need_change_rod}")
-    if need_change_rod<0.9:
+    if need_change_rod<0.8:
         return False
 
     log("鱼竿没耐久了，换杆")
