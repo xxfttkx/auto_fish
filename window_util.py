@@ -185,10 +185,11 @@ def find_best_water_region(screenshot, fish_region, template_path, step=10):
     x_end = width
 
     for x in range(x_start, x_end + 1, step):
-        # 拿 2 倍高度的区域
-        multi = 2
-        combined_region = screenshot_gray[y:y + multi * template_h, x:x + template_w]
-        if combined_region.shape != (multi * template_h, template_w):
+        # 拿 2.5 倍高度的区域
+        multi = 2.5
+        height = int(multi * template_h)
+        combined_region = screenshot_gray[y:y + height, x:x + template_w]
+        if combined_region.shape != (height, template_w):
             continue
 
         white_mask = (combined_region > 210).astype(np.uint8)
